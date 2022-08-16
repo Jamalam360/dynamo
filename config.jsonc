@@ -1,0 +1,15 @@
+{
+    "beans": [
+        "baked",
+        "heinz"
+    ],
+    "foo": "bar",
+    "bar": 42,
+    "baz": true,
+    "qux": {
+        "quux": "corge",
+        "corge": 42,
+        "grault": true
+    },
+    "corge": "grault"
+}
