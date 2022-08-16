@@ -3,5 +3,12 @@
         "options": {
             "indentWidth": 4
         }
+    },
+    "lint": {
+        "rules": {
+            "exclude": [
+                "no-explicit-any"
+            ]
+        }
     }
 }

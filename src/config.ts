@@ -1,38 +1,47 @@
-const parsers: Record<string, { url: string; extensions: string[] }> = {
-    jsonc: {
-        url: "./formats/jsonc.ts",
-        extensions: ["jsonc"],
-    },
-    yaml: {
-        url: "https://deno.land/std@v0.151.0/encoding/yaml.ts",
-        extensions: ["yaml", "yml"],
-    },
-    properties: {
-        url: "https://deno.land/x/properties@v1.0.0/mod.ts",
-        extensions: ["properties"],
-    },
-    improperties: {
-        url: "https://deno.land/x/improperties@v1.0.0/mod.ts",
-        extensions: ["improperties", "imprpt"],
-    },
-    toml: {
-        url: "https://deno.land/std@v0.151.0/encoding/toml.ts",
-        extensions: ["toml"],
-    },
-    ini: { url: "https://deno.land/x/ini@v2.1.0/mod.ts", extensions: ["ini"] },
-    xml: { url: "https://deno.land/x/xml@2.0.4/mod.ts", extensions: ["xml"] },
-};
+import { parsers } from "./parsers.ts";
+import { importModule } from "../deps.ts";
 
+/**
+ * An interface representing the base of a configuration file.
+ */
 export interface Config {
+    /**
+     * Reloads the configuration file from the filesystem.
+     */
     load: () => Promise<void>;
+    /**
+     * The format of the configuration file.
+     */
     format: string;
 }
 
+/**
+ * Options for the #create method.
+ */
 interface Options {
+    /**
+     * The path to the configuration file, **WITHOUT** the extension.
+     *
+     * Defaults to `./config`.
+     */
     file?: string;
+    /**
+     * Formats can be found in the `./parsers.ts` file.
+     *
+     * By default, all formats are allowed.
+     */
     allowedFormats?: string[];
 }
 
+/**
+ * Discovers and loads a configuration file.
+ *
+ * @remarks
+ * You need not call `load` on the returned object, as this method does that for you.
+ *
+ * @param opts - Options for the #create method.
+ * @returns The parsed configuation.
+ */
 export async function create<T extends Config>(opts?: Options): Promise<T> {
     const { file = "./config" } = opts || {};
 
@@ -40,11 +49,11 @@ export async function create<T extends Config>(opts?: Options): Promise<T> {
     let fullFile = "";
 
     for (const key of Object.keys(parsers)) {
-        const { url, extensions } = parsers[key];
+        const { extensions } = parsers[key];
 
         if (
             (opts?.allowedFormats && opts.allowedFormats.includes(key)) ||
-            !opts?.allowedFormats
+            (!opts?.allowedFormats || opts.allowedFormats.length == 0)
         ) {
             for (const extension of extensions) {
                 try {
@@ -69,18 +78,19 @@ export async function create<T extends Config>(opts?: Options): Promise<T> {
         throw new Error("No config with suitable format found");
     }
 
-    const lib = await import(
-        new URL(parsers[parser].url, import.meta.url).href
+    const lib = await importModule(
+        new URL(parsers[parser].url, import.meta.url).href,
     );
 
-    // deno-lint-ignore no-explicit-any
-    const decode = lib.decode as (data: string) => any;
+    const parse = lib[parsers[parser].symbol ?? "parse"] as (
+        data: string,
+    ) => Record<string, unknown>;
 
     // deno-lint-ignore no-explicit-any
     const config: Record<string, any> = {
         load: async () => {
             const data = await Deno.readTextFile(fullFile);
-            const res = decode(data);
+            const res = parse(data);
 
             for (const key of Object.keys(res)) {
                 config[key] = res[key];
@@ -93,20 +103,3 @@ export async function create<T extends Config>(opts?: Options): Promise<T> {
 
     return config as T;
 }
-
-interface TestConfig extends Config {
-    beans: string[];
-    foo: string;
-    bar: number;
-    baz: boolean;
-    qux: {
-        quux: string;
-        corge: number;
-        grault: boolean;
-    };
-    corge: string;
-}
-
-const config = await create<TestConfig>();
-
-console.log(JSON.stringify(config, null, 2));
