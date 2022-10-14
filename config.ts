@@ -14,7 +14,7 @@ export type Config = Record<string, any> & {
 /**
  * Options for the #create method.
  */
-interface Options {
+interface Options<T extends Config> {
 	/**
 	 * The path to the configuration file - remember the file extension!
 	 */
@@ -26,6 +26,7 @@ interface Options {
 	 * The default is YAML.
 	 */
 	parser?: (content: string) => any;
+	defaults?: Partial<T>;
 }
 
 /**
@@ -73,15 +74,23 @@ async function getConfigContents(path: string): Promise<string> {
  * @param opts - Options for the #create method.
  * @returns The parsed configuation.
  */
-export async function create<T extends Config>(opts: Options): Promise<T> {
-	const { file, parser = yaml } = opts;
+export async function create<T extends Config>(opts: Options<T>): Promise<T> {
+	const { file, parser = yaml, defaults } = opts;
 
-	const config: Config = {
+	let config: Config = {
 		reload: async () => {
 			const res = parser(await getConfigContents(file));
-
+			config = { reload: config.reload };
 			for (const key of Object.keys(res)) {
 				config[key] = res[key];
+			}
+
+			if (defaults) {
+				for (const key of Object.keys(defaults)) {
+					if (!config[key]) {
+						config[key] = defaults[key];
+					}
+				}
 			}
 		},
 	};
