@@ -4,12 +4,12 @@ import { parseYaml } from "./deps.ts";
 /**
  * An interface representing the base of a configuration file.
  */
-export type Config = Record<string, any> & {
+export interface Config extends Record<string, any> {
 	/**
 	 * Reloads the configuration file from the filesystem.
 	 */
 	reload: () => Promise<void>;
-};
+}
 
 /**
  * Options for the #create method.
