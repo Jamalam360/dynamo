@@ -9,19 +9,32 @@ Using Dynamo is very simple.
 ```ts
 import * as Dynamo from "https://deno.land/x/dynamo/mod.ts";
 
+// You can also use a type alias unioned with Dynamo.Config
+// if you wish.
 interface ApplicationConfig extends Dynamo.Config {
 	verbose: boolean;
-	port: number;
-	hostname: string;
+	port?: number;
+	hostname?: string;
 	credentials: {
 		username: string;
 		password: string;
 	};
 }
 
-const config = await Dynamo.create<ApplicationConfig>({ file: "./config.yml" });
+// We can pass defaults like so.
+const defaults: Partial<ApplicationConfig> = {
+	port: 8080,
+	hostname: "localhost",
+};
 
-// reload can be called to reload the config from the filesystem.
+const config = await Dynamo.create<ApplicationConfig>({
+	file: "./config.yml",
+	defaults,
+});
+
+console.log(config.port);
+
+// Reload can be called to reload the config from the filesystem.
 await config.reload();
 ```
 
