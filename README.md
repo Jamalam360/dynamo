@@ -57,6 +57,10 @@ const config = await Dynamo.create<ApplicationConfig>({
 
 To see the full list of parsers, see the `parsers` directory.
 
+## Support
+
+For support, open an [issue](https://github.com/Jamalam360/Dynamo/issues), or contact me [on Discord](https://discord.jamalam.tech).
+
 ## License
 
 _Dynamo_ is licensed under the MIT license.
