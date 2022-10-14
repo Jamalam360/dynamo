@@ -1,0 +1,9 @@
+{
+	"escapedVar": "\\${hi}",
+	"var": "${HI}",
+	"notReplaced": "hello",
+	"object": {
+		"num": 900,
+		"list": [1, 2, 3, 4, 5]
+	}
+}

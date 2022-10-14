@@ -11,6 +11,13 @@ export type Config = Record<string, any> & {
 	reload: () => Promise<void>;
 };
 
+export type RecursivePartial<T> = {
+	[P in keyof T]?: T[P] extends (infer U)[] ? RecursivePartial<U>[]
+		// deno-lint-ignore ban-types
+		: T[P] extends object ? RecursivePartial<T[P]>
+		: T[P];
+};
+
 /**
  * Options for the #create method.
  */
@@ -26,7 +33,7 @@ interface Options<T extends Config> {
 	 * The default is YAML.
 	 */
 	parser?: (content: string) => any;
-	defaults?: Partial<T>;
+	defaults?: RecursivePartial<T>;
 }
 
 /**
@@ -65,11 +72,29 @@ async function getConfigContents(path: string): Promise<string> {
 	return contents;
 }
 
+function fillDefaults(
+	object: Record<string, unknown>,
+	defaults: Record<string, unknown>,
+): Record<string, unknown> {
+	for (const key of Object.keys(defaults)) {
+		if (typeof defaults[key] === "object") {
+			object[key] = fillDefaults(
+				object[key] as Record<string, unknown>,
+				defaults[key] as Record<string, unknown>,
+			);
+		} else if (!object[key]) {
+			object[key] = defaults[key];
+		}
+	}
+
+	return object;
+}
+
 /**
  * Loads a configuration file.
  *
  * @remarks
- * You need not call `load` on the returned object, as this method does that for you.
+ * You need not call `reload` on the returned object, as this method does that for you.
  *
  * @param opts - Options for the #create method.
  * @returns The parsed configuation.
@@ -82,15 +107,15 @@ export async function create<T extends Config>(opts: Options<T>): Promise<T> {
 			const res = parser(await getConfigContents(file));
 			config = { reload: config.reload };
 			for (const key of Object.keys(res)) {
-				config[key] = res[key].replace("\\$", "$");
+				if (typeof res[key] === "string") {
+					res[key] = res[key].replace("\\$", "$");
+				}
+
+				config[key] = res[key];
 			}
 
 			if (defaults) {
-				for (const key of Object.keys(defaults)) {
-					if (!config[key]) {
-						config[key] = defaults[key];
-					}
-				}
+				config = fillDefaults(config, defaults) as Config;
 			}
 		},
 	};
