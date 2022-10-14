@@ -1,19 +1,6 @@
 # Dynamo
 
-_Dynamo_ is a configuration library for Deno applications that allows users to
-decide what format they wish to use, with no extra work from developers.
-
-## Supported Formats
-
-- JSON
-- JSONC
-- YAML
-- TOML
-- INI*
-- Properties
-- Improperties
-
-*: _Formats marked with an asterisk do not support arrays._
+_Dynamo_ is a useful configuration library for Deno applications.
 
 ## Usage
 
@@ -23,18 +10,40 @@ Using Dynamo is very simple.
 import * as Dynamo from "https://deno.land/x/dynamo/mod.ts";
 
 interface ApplicationConfig extends Dynamo.Config {
-    verbose: boolean;
-    port: number;
-    hostname: string;
-    credentials: {
-        username: string;
-        password: string;
-    };
+	verbose: boolean;
+	port: number;
+	hostname: string;
+	credentials: {
+		username: string;
+		password: string;
+	};
 }
 
-const config = await Dynamo.create<ApplicationConfig>();
+const config = await Dynamo.create<ApplicationConfig>({ file: "./config.yml" });
+
+// reload can be called to reload the config from the filesystem.
+await config.reload();
 ```
 
-Users of your application can now configure it using any of the supported config
-formats. By default, Dynamo searches for `./config.[extension]`, but this can be
-configured (along with other options).
+## Formats
+
+By default, _Dynamo_ uses YAML for configuration, but it is designed to be
+extendable. The `create` method takes an optional `parser` parameter with the
+type `(content: string) => any`. This allows you to use any format you can
+parse. _Dynamo_ includes extra parsers for different formats in the `parsers`
+directory. For example, to use JSON:
+
+```ts
+import { json } from "https://deno.land/x/dynamo/parsers/json.ts";
+
+const config = await Dynamo.create<ApplicationConfig>({
+	file: "./config.json",
+	parser: json,
+});
+```
+
+To see the full list of parsers, see the `parsers` directory.
+
+## License
+
+_Dynamo_ is licensed under the MIT license.

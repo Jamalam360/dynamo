@@ -1,14 +1,14 @@
 {
-    "fmt": {
-        "options": {
-            "indentWidth": 4
-        }
-    },
-    "lint": {
-        "rules": {
-            "exclude": [
-                "no-explicit-any"
-            ]
-        }
+  "fmt": {
+    "options": {
+      "useTabs": true
     }
+  },
+  "lint": {
+    "rules": {
+      "exclude": [
+        "no-explicit-any"
+      ]
+    }
+  }
 }
