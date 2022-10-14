@@ -82,7 +82,7 @@ export async function create<T extends Config>(opts: Options<T>): Promise<T> {
 			const res = parser(await getConfigContents(file));
 			config = { reload: config.reload };
 			for (const key of Object.keys(res)) {
-				config[key] = res[key];
+				config[key] = res[key].replace("\\$", "$");
 			}
 
 			if (defaults) {
@@ -96,6 +96,5 @@ export async function create<T extends Config>(opts: Options<T>): Promise<T> {
 	};
 
 	await config.reload();
-
 	return config as T;
 }
