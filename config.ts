@@ -97,7 +97,7 @@ function fillDefaults(
  * You need not call `reload` on the returned object, as this method does that for you.
  *
  * @param opts - Options for the #create method.
- * @returns The parsed configuation.
+ * @returns The parsed configuration.
  */
 export async function create<T extends Config>(opts: Options<T>): Promise<T> {
 	const { file, parser = yaml, defaults } = opts;
